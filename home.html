@@ -3,71 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSV Upload with Dynamic Range Filter and Interactive Graph</title>
+    <title>Interactive Graph - MyVi Packs</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            text-align: center;
             padding: 20px;
+            color: #0056b3;
+        }
+        #container {
+            width: 80%;
+            margin: 0 auto;
+        }
+        #filterControls {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+        label {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        input[type="range"] {
+            width: 300px;
+        }
+        button {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 1em;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #004494;
         }
         #chart {
             width: 100%;
             height: 600px;
-        }
-        #filterControls {
             margin-top: 20px;
-            margin-bottom: 20px;
         }
-        label {
-            font-weight: bold;
+        .file-upload {
+            background-color: #fff;
+            border: 2px dashed #0056b3;
+            border-radius: 10px;
+            text-align: center;
+            padding: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .file-upload:hover {
+            background-color: #eef5ff;
         }
     </style>
 </head>
 <body>
 
-    <h1>Upload CSV and Visualize Interactive Graph with Dynamic Range Filter</h1>
-    
-    <!-- CSV File Upload -->
-    <input type="file" id="csvFileInput" accept=".csv" />
-    <br/><br/>
+    <h1>Interactive Graph for MyVi Packs</h1>
 
-    <!-- Filter Controls -->
-    <div id="filterControls">
-        <label for="minValidityFilter">Filter by Min Validity (Days):</label>
-        <input type="range" id="minValidityFilter" min="0" max="366" step="1" value="0" oninput="updateMinValidityLabel(this.value)">
-        <span id="minValidityLabel">0</span> days
+    <div id="container">
+        <!-- Default CSV Loaded -->
+        <div class="file-upload" id="csvFileInput" onclick="uploadCSV()">Click to upload a CSV or use the default one (myvi_sorted.csv)</div>
         <br/><br/>
 
-        <label for="maxValidityFilter">Filter by Max Validity (Days):</label>
-        <input type="range" id="maxValidityFilter" min="0" max="366" step="1" value="366" oninput="updateMaxValidityLabel(this.value)">
-        <span id="maxValidityLabel">366</span> days
-        <br/><br/>
+        <!-- Filter Controls -->
+        <div id="filterControls">
+            <div>
+                <label for="minValidityFilter">Filter by Min Validity (Days):</label><br/>
+                <input type="range" id="minValidityFilter" min="0" max="366" step="1" value="0" oninput="updateMinValidityLabel(this.value)">
+                <span id="minValidityLabel">0</span> days
+            </div>
+            <div>
+                <label for="maxValidityFilter">Filter by Max Validity (Days):</label><br/>
+                <input type="range" id="maxValidityFilter" min="0" max="366" step="1" value="366" oninput="updateMaxValidityLabel(this.value)">
+                <span id="maxValidityLabel">366</span> days
+            </div>
+            <div>
+                <button onclick="applyFilterAndPlot()">Apply Filter and Plot</button>
+            </div>
+        </div>
 
-        <button onclick="applyFilterAndPlot()">Apply Filter and Plot</button>
+        <!-- Chart Placeholder -->
+        <div id="chart"></div>
     </div>
 
-    <!-- Chart Placeholder -->
-    <div id="chart"></div>
-    
     <script>
         let parsedData = [];
+        let csvUrl = "myvi_sorted.csv"; // Default CSV
 
-        // Parse CSV data upon file upload
-        document.getElementById('csvFileInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            
-            if (file) {
-                Papa.parse(file, {
-                    header: true,
-                    dynamicTyping: true,  // Ensures numeric values are parsed as numbers
-                    complete: function(results) {
-                        parsedData = results.data;
-                        processCSVData(parsedData);
-                    }
+        // Load default CSV on page load
+        window.onload = function () {
+            fetchCSV(csvUrl);
+        };
+
+        // Parse CSV data from URL or uploaded file
+        function fetchCSV(csvUrl) {
+            fetch(csvUrl)
+                .then(response => response.text())
+                .then(csv => {
+                    Papa.parse(csv, {
+                        header: true,
+                        dynamicTyping: true,
+                        complete: function (results) {
+                            parsedData = results.data;
+                            processCSVData(parsedData);
+                        }
+                    });
                 });
-            }
-        });
+        }
+
+        // Allow user to upload their own CSV
+        function uploadCSV() {
+            const inputElement = document.createElement('input');
+            inputElement.type = 'file';
+            inputElement.accept = '.csv';
+            inputElement.onchange = function (event) {
+                const file = event.target.files[0];
+                if (file) {
+                    Papa.parse(file, {
+                        header: true,
+                        dynamicTyping: true,
+                        complete: function (results) {
+                            parsedData = results.data;
+                            processCSVData(parsedData);
+                        }
+                    });
+                }
+            };
+            inputElement.click();
+        }
 
         // Update the labels for the min and max validity filters dynamically
         function updateMinValidityLabel(value) {
@@ -79,17 +152,15 @@
         }
 
         function processCSVData(data) {
-            // Extract data for initial plot (without filter)
             const validity = [];
             const costPerDay = [];
-            const descriptions = [];  // For hover text
-            
+            const descriptions = [];
+
             data.forEach(row => {
                 if (row['validity_days'] && row['cost_per_day']) {
                     validity.push(row['validity_days']);
                     costPerDay.push(row['cost_per_day']);
 
-                    // Create hover text with multiple fields
                     const hoverText = `
                         Consumer Description: ${row['CONSUMER_PRODUCT_DESCRIPTION']}<br>
                         Retailer Description: ${row['RETAILER_PRODUCT_DESCRIPTION']}<br>
@@ -99,26 +170,28 @@
                 }
             });
 
-            // Create the initial graph with hover text
             plotGraph(validity, costPerDay, descriptions);
         }
 
         // Plot the graph using Plotly.js
         function plotGraph(validity, costPerDay, descriptions) {
             const trace = {
-                x: validity,  // X-axis: Validity
-                y: costPerDay,  // Y-axis: Cost Per Day
+                x: validity,
+                y: costPerDay,
                 mode: 'markers',
                 type: 'scatter',
-                marker: { size: 12 },
-                text: descriptions,  // Hover text
-                hoverinfo: 'text+x+y',  // Show hover text, X, and Y values
+                marker: { size: 12, color: '#0056b3' },
+                text: descriptions,
+                hoverinfo: 'text+x+y',
             };
 
             const layout = {
                 title: 'Cost Per Day vs Validity',
-                xaxis: { title: 'Validity (Days)' },
-                yaxis: { title: 'Cost Per Day' }
+                xaxis: { title: 'Validity (Days)', ticklen: 5 },
+                yaxis: { title: 'Cost Per Day', ticklen: 5 },
+                hovermode: 'closest',
+                plot_bgcolor: "#f4f4f9",
+                paper_bgcolor: "#f4f4f9"
             };
 
             Plotly.newPlot('chart', [trace], layout);
@@ -129,19 +202,17 @@
             const minValidity = parseInt(document.getElementById('minValidityFilter').value);
             const maxValidity = parseInt(document.getElementById('maxValidityFilter').value);
 
-            // Filter the parsed data based on min and max validity days
             const filteredData = parsedData.filter(row => row['validity_days'] >= minValidity && row['validity_days'] <= maxValidity);
 
             const validity = [];
             const costPerDay = [];
-            const descriptions = [];  // For hover text
-            
+            const descriptions = [];
+
             filteredData.forEach(row => {
                 if (row['validity_days'] && row['cost_per_day']) {
                     validity.push(row['validity_days']);
                     costPerDay.push(row['cost_per_day']);
 
-                    // Create hover text with multiple fields
                     const hoverText = `
                         Consumer Description: ${row['CONSUMER_PRODUCT_DESCRIPTION']}<br>
                         Retailer Description: ${row['RETAILER_PRODUCT_DESCRIPTION']}<br>
@@ -151,7 +222,6 @@
                 }
             });
 
-            // Plot the filtered graph
             plotGraph(validity, costPerDay, descriptions);
         }
     </script>
