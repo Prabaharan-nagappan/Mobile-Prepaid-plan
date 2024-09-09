@@ -38,18 +38,3 @@ df['cost_per_day'] = df['UNIT_COST'] / df['validity_days']
 # Step 3: Sort by 'cost_per_day'
 df_sorted = df.sort_values(by='cost_per_day')
 df_sorted.to_csv('myvi_sorted.csv', index=False)
-
-# import matplotlib.pyplot as plt
-
-# # Select columns for visualization
-# x = df_sorted['UNIT_COST']
-# y = df_sorted['validity_days']
-
-# # Create a scatter plot
-# plt.figure(figsize=(10, 6))  # Adjust figure size as needed
-# plt.scatter(x, y)
-# plt.xlabel('UNIT_COST')
-# plt.ylabel('validity_days')
-# plt.title('Scatter Plot of UNIT_COST vs validity_days')
-# plt.grid(True)
-# plt.show()
