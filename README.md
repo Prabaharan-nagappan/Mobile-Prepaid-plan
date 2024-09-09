@@ -1,6 +1,7 @@
 # Mobile-Prepaid-plan
 
-https://5500-prabaharann-mobileprepa-myjd138ktix.ws-us116.gitpod.io/home.html
+Live server github
+https://prabaharan-nagappan.github.io/Mobile-Prepaid-plan/home.html
 
 For local setup :
 clone this repo:
