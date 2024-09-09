@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Upload with Data Filter and Interactive Graph</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        #chart {
+            width: 100%;
+            height: 600px;
+        }
+        #filterControls {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Upload CSV and Visualize Interactive Graph with Data Filter</h1>
+    
+    <!-- CSV File Upload -->
+    <input type="file" id="csvFileInput" accept=".csv" />
+    <br/><br/>
+
+    <!-- Filter Controls -->
+    <div id="filterControls">
+        <label for="validityFilter">Filter by Validity (Days):</label>
+        <input type="range" id="validityFilter" min="0" max="100" step="1" value="100" oninput="updateValidityLabel(this.value)">
+        <span id="validityLabel">100</span> days
+        <br/><br/>
+        <button onclick="applyFilterAndPlot()">Apply Filter and Plot</button>
+    </div>
+
+    <!-- Chart Placeholder -->
+    <div id="chart"></div>
+    
+    <script>
+        let parsedData = [];
+
+        document.getElementById('csvFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            
+            if (file) {
+                Papa.parse(file, {
+                    header: true,
+                    dynamicTyping: true,  // Ensures numeric values are parsed as numbers
+                    complete: function(results) {
+                        parsedData = results.data;
+                        processCSVData(parsedData);
+                    }
+                });
+            }
+        });
+
+        function updateValidityLabel(value) {
+            document.getElementById('validityLabel').innerText = value;
+        }
+
+        function processCSVData(data) {
+            // Extract data for initial plot (without filter)
+            const validity = [];
+            const costPerDay = [];
+            const descriptions = [];  // For hover text
+            
+            data.forEach(row => {
+                if (row['validity_days'] && row['cost_per_day'] && row['CONSUMER_PRODUCT_DESCRIPTION']) {
+                    validity.push(row['validity_days']);
+                    costPerDay.push(row['cost_per_day']);
+                    descriptions.push(row['CONSUMER_PRODUCT_DESCRIPTION']);  // Hover text
+                }
+            });
+
+            // Create the initial graph with hover text
+            plotGraph(validity, costPerDay, descriptions);
+        }
+
+        function plotGraph(validity, costPerDay, descriptions) {
+            const trace = {
+                x: validity,  // X-axis: Validity
+                y: costPerDay,  // Y-axis: Cost Per Day
+                mode: 'markers',
+                type: 'scatter',
+                marker: { size: 12 },
+                text: descriptions,  // Hover text
+                hoverinfo: 'text+x+y',  // Show hover text, X, and Y values
+            };
+
+            const layout = {
+                title: 'Cost Per Day vs Validity',
+                xaxis: { title: 'Validity (Days)' },
+                yaxis: { title: 'Cost Per Day' }
+            };
+
+            Plotly.newPlot('chart', [trace], layout);
+        }
+
+        function applyFilterAndPlot() {
+            // Get the current value of the filter
+            const maxValidity = parseInt(document.getElementById('validityFilter').value);
+
+            // Filter the parsed data based on validity days
+            const filteredData = parsedData.filter(row => row['validity_days'] <= maxValidity);
+
+            const validity = [];
+            const costPerDay = [];
+            const descriptions = [];  // For hover text
+            
+            filteredData.forEach(row => {
+                if (row['validity_days'] && row['cost_per_day'] && row['CONSUMER_PRODUCT_DESCRIPTION']) {
+                    validity.push(row['validity_days']);
+                    costPerDay.push(row['cost_per_day']);
+                    descriptions.push(row['CONSUMER_PRODUCT_DESCRIPTION']);  // Hover text
+                }
+            });
+
+            // Plot the filtered graph
+            plotGraph(validity, costPerDay, descriptions);
+        }
+    </script>
+
+</body>
+</html>
