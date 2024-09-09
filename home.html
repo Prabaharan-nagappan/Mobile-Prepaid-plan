@@ -14,44 +14,58 @@
             margin: 0;
             padding: 0;
         }
+
         h1 {
             text-align: center;
             padding: 20px;
             color: #0056b3;
+            font-size: 1.5em;
         }
+
         #container {
-            width: 80%;
+            width: 90%;
             margin: 0 auto;
+            max-width: 1200px;
         }
+
         #filterControls {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            gap: 20px;
             margin: 20px 0;
         }
+
         label {
             font-weight: bold;
             font-size: 1.1em;
         }
+
         input[type="range"] {
-            width: 300px;
+            width: 100%;
         }
+
         button {
             background-color: #0056b3;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 15px 20px;
             cursor: pointer;
-            font-size: 1em;
+            font-size: 1.2em;
             border-radius: 5px;
+            text-align: center;
+            width: 100%;
         }
+
         button:hover {
             background-color: #004494;
         }
+
         #chart {
             width: 100%;
-            height: 600px;
+            height: 500px;
             margin-top: 20px;
         }
+
         .file-upload {
             background-color: #fff;
             border: 2px dashed #0056b3;
@@ -61,8 +75,40 @@
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
+
         .file-upload:hover {
             background-color: #eef5ff;
+        }
+
+        /* Responsive Styles */
+        @media (min-width: 768px) {
+            #filterControls {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+
+            button {
+                width: auto;
+                flex-shrink: 0;
+                padding: 10px 20px;
+                font-size: 1em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.2em;
+                padding: 10px;
+            }
+
+            label {
+                font-size: 1em;
+            }
+
+            button {
+                font-size: 1em;
+                padding: 10px;
+            }
         }
     </style>
 </head>
