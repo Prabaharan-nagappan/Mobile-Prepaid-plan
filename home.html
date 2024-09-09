@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSV Upload with Data Filter and Interactive Graph</title>
+    <title>CSV Upload with Dynamic Range Filter and Interactive Graph</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <style>
@@ -26,7 +26,7 @@
 </head>
 <body>
 
-    <h1>Upload CSV and Visualize Interactive Graph with Data Filter</h1>
+    <h1>Upload CSV and Visualize Interactive Graph with Dynamic Range Filter</h1>
     
     <!-- CSV File Upload -->
     <input type="file" id="csvFileInput" accept=".csv" />
@@ -34,10 +34,16 @@
 
     <!-- Filter Controls -->
     <div id="filterControls">
-        <label for="validityFilter">Filter by Validity (Days):</label>
-        <input type="range" id="validityFilter" min="0" max="100" step="1" value="100" oninput="updateValidityLabel(this.value)">
-        <span id="validityLabel">100</span> days
+        <label for="minValidityFilter">Filter by Min Validity (Days):</label>
+        <input type="range" id="minValidityFilter" min="0" max="366" step="1" value="0" oninput="updateMinValidityLabel(this.value)">
+        <span id="minValidityLabel">0</span> days
         <br/><br/>
+
+        <label for="maxValidityFilter">Filter by Max Validity (Days):</label>
+        <input type="range" id="maxValidityFilter" min="0" max="366" step="1" value="366" oninput="updateMaxValidityLabel(this.value)">
+        <span id="maxValidityLabel">366</span> days
+        <br/><br/>
+
         <button onclick="applyFilterAndPlot()">Apply Filter and Plot</button>
     </div>
 
@@ -47,6 +53,7 @@
     <script>
         let parsedData = [];
 
+        // Parse CSV data upon file upload
         document.getElementById('csvFileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             
@@ -62,8 +69,13 @@
             }
         });
 
-        function updateValidityLabel(value) {
-            document.getElementById('validityLabel').innerText = value;
+        // Update the labels for the min and max validity filters dynamically
+        function updateMinValidityLabel(value) {
+            document.getElementById('minValidityLabel').innerText = value;
+        }
+
+        function updateMaxValidityLabel(value) {
+            document.getElementById('maxValidityLabel').innerText = value;
         }
 
         function processCSVData(data) {
@@ -73,10 +85,17 @@
             const descriptions = [];  // For hover text
             
             data.forEach(row => {
-                if (row['validity_days'] && row['cost_per_day'] && row['CONSUMER_PRODUCT_DESCRIPTION']) {
+                if (row['validity_days'] && row['cost_per_day']) {
                     validity.push(row['validity_days']);
                     costPerDay.push(row['cost_per_day']);
-                    descriptions.push(row['CONSUMER_PRODUCT_DESCRIPTION']);  // Hover text
+
+                    // Create hover text with multiple fields
+                    const hoverText = `
+                        Consumer Description: ${row['CONSUMER_PRODUCT_DESCRIPTION']}<br>
+                        Retailer Description: ${row['RETAILER_PRODUCT_DESCRIPTION']}<br>
+                        Read More: ${row['READ_MORE']}
+                    `;
+                    descriptions.push(hoverText);
                 }
             });
 
@@ -84,6 +103,7 @@
             plotGraph(validity, costPerDay, descriptions);
         }
 
+        // Plot the graph using Plotly.js
         function plotGraph(validity, costPerDay, descriptions) {
             const trace = {
                 x: validity,  // X-axis: Validity
@@ -104,22 +124,30 @@
             Plotly.newPlot('chart', [trace], layout);
         }
 
+        // Apply filters based on min and max validity days and plot the filtered data
         function applyFilterAndPlot() {
-            // Get the current value of the filter
-            const maxValidity = parseInt(document.getElementById('validityFilter').value);
+            const minValidity = parseInt(document.getElementById('minValidityFilter').value);
+            const maxValidity = parseInt(document.getElementById('maxValidityFilter').value);
 
-            // Filter the parsed data based on validity days
-            const filteredData = parsedData.filter(row => row['validity_days'] <= maxValidity);
+            // Filter the parsed data based on min and max validity days
+            const filteredData = parsedData.filter(row => row['validity_days'] >= minValidity && row['validity_days'] <= maxValidity);
 
             const validity = [];
             const costPerDay = [];
             const descriptions = [];  // For hover text
             
             filteredData.forEach(row => {
-                if (row['validity_days'] && row['cost_per_day'] && row['CONSUMER_PRODUCT_DESCRIPTION']) {
+                if (row['validity_days'] && row['cost_per_day']) {
                     validity.push(row['validity_days']);
                     costPerDay.push(row['cost_per_day']);
-                    descriptions.push(row['CONSUMER_PRODUCT_DESCRIPTION']);  // Hover text
+
+                    // Create hover text with multiple fields
+                    const hoverText = `
+                        Consumer Description: ${row['CONSUMER_PRODUCT_DESCRIPTION']}<br>
+                        Retailer Description: ${row['RETAILER_PRODUCT_DESCRIPTION']}<br>
+                        Read More: ${row['READ_MORE']}
+                    `;
+                    descriptions.push(hoverText);
                 }
             });
 
