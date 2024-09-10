@@ -269,9 +269,9 @@
                     costPerDay.push(row['cost_per_day']);
 
                     const hoverText = `
-                        Consumer Description: ${row['CONSUMER_PRODUCT_DESCRIPTION']}<br>
-                        Retailer Description: ${row['RETAILER_PRODUCT_DESCRIPTION']}<br>
-                        Read More: ${row['READ_MORE']}
+                        Consumer Description: <p>${row['CONSUMER_PRODUCT_DESCRIPTION']}</p><br>
+                        Retailer Description: <p>${row['RETAILER_PRODUCT_DESCRIPTION']}</p><br>
+                        Read More: <p>${row['READ_MORE']}</p>
                     `;
                     descriptions.push(hoverText);
                 }
