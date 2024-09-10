@@ -207,10 +207,10 @@
                     validity.push(row['validity_days']);
                     costPerDay.push(row['cost_per_day']);
 
-                    const hoverText = `
+                    const hoverText = `<div><p>
                         Consumer Description: ${row['CONSUMER_PRODUCT_DESCRIPTION']}<br>
                         Retailer Description: ${row['RETAILER_PRODUCT_DESCRIPTION']}<br>
-                        Read More: ${row['READ_MORE']}
+                        Read More: ${row['READ_MORE']}</p></div>
                     `;
                     descriptions.push(hoverText);
                 }
